@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title></title>
+	<link rel="stylesheet" type="text/css" href="../src/autocomplete.css">
+
+	<script type="text/javascript" src="jquery.js"></script>
+	<script type="text/javascript" src="../src/autocomplete.js"></script>
+</head>
+<body>
+	<div class="complete">
+		<input type="text" name="">
+	</div>
+<script type="text/javascript">
+var $search = $(".complete>input");
+$search.completer({
+	source: [1,2,3],
+	separator: 'q',
+	zIndex: 100,
+	parent: '.complete',
+	suggest: false,
+	position: {left: '0',minWidth: '195px'},
+	/*ajax: function(){
+
+		var that = this;
+		var keyword = this.$element.val();
+		$.ajax({
+			type: 'post',
+			url: 'http:dev.slart.com/Display/Cooper/aSearch',
+			data: { key: keyword },
+			cache: false,
+			async: false,
+			dataType: 'json',
+			success: function(sender){
+				// console.log(sender);
+				var source = [];
+				var ajaxData = [];
+
+				// 防止返回空数据
+				sender.data && $.each(sender.data,function(i, v){
+					source.push(v.title);
+					ajaxData.push({
+						id: v.id,
+						title: v.title,
+						type: v.type
+					});
+				})
+				that.data = source;
+				that.ajaxData = ajaxData;
+			},
+			error: function(){
+				that.data = [];
+				that.ajaxData = [{id:'',title:'',type:''}];
+			}
+		});
+	},*/
+	search: function(){
+
+		var $active = $(".completer-container>li.completer-selected");
+		var data = {
+			id: $active.attr('data-id'),
+			type: $active.attr('data-type'),
+		};
+		switch(data.type){
+			case 'draw': 
+				location.href = "/Display/Products/detail/id/"+data.id+".html";
+				break;
+			case 'author':
+				location.href = "/Display/Artists/detail/id/"+data.id+".html";
+				break;
+			case 'exhibition':
+				location.href="/Display/Exhibition/scene/id/"+data.id+".html";
+				break;
+			default: alert("暂无数据");	
+
+		}
+	}
+
+});
+</script>
+</body>
+</html>
