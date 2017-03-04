@@ -62,15 +62,13 @@
     init: function () {
       var options = this.options;
 
-      if(!options.ajax){
-        this.data = toArray(options.source);  
-      }
+      this.data = options.source ? toArray(options.source) : [];  
       
       this.regexp = toRegexp(options.separator);
       // 自动补全html代码容器
       this.$completer = $(options.template);
       this.$completer.hide().appendTo(options.parent);
-      this.place(); // 设置插件位置以及样式
+      this.style(); // 设置插件位置以及样式
 
       // 绑定事件
       this.$element.attr('autocomplete', 'off').on({
@@ -112,7 +110,7 @@
         });
       }
     },
-
+    
     attach: function (val) {
       var options = this.options;
       var separator = options.separator;
@@ -157,44 +155,57 @@
       var reg = new RegExp(espace(val), 'i');
       var that = this;
       var matched = [];
+      this.valKey = that.options.ajax ? that.options.ajax.key : null;
 
-      // extend by issac
-      that.options.ajax && that.options.ajax.call(that);
+      that.options.ajax 
+      ? (function(sender){
 
-      $.each(this.data, function (i, n) {
+        $.ajax({
+          type: sender.method || 'get',
+          url: sender.url,
+          data: sender.data || {key: val},
+          cache: false,
+          dataType: 'json',
+          async: false,
+          success: function(res){
+            matched = sender.filter ? sender.filter(res) : res;
+          },
+          error: function(){
+            console.log('Error: CONNECT ERROR!');
+          }
+        });
+      })(that.options.ajax) 
+      : $.each(this.data, function (i, n) {
         if (reg.test(n)) {
           matched.push(n);
         }
       });
 
-      /*matched.sort(function (a, b) {
-        return a.indexOf(val) - b.indexOf(val);
-      });*/
+      matched.sort(function (a, b) {
 
-      /*$.each(matched, function (i, n) {
-        matched[i] = that.template(n);
-      });*/
-
-      // extend by issac
-      $.each(this.ajaxData, function (i, n) {
-        matched[i] = that.template(n);
+        return that.options.ajax 
+               ? a[that.valKey].indexOf(val) - b[that.valKey].indexOf(val) 
+               : a.indexOf(val) - b.indexOf(val);
       });
 
+      $.each(matched, function (i, n) {
+        matched[i] = that.template(n);
+      });
       this.fill(matched.join(''));
     },
 
-    /*template: function (text) {
-      var tag = this.options.itemTag;
-
-      return ('<' + tag + '>' + text + '</' + tag + '>');
-    },*/
-
-    // extend by issac
     template: function (sender) {
-      var tag = this.options.itemTag;
-      return ('<'+tag+' title="'+sender.title+'">' + sender.title + '</'+tag+'>');
+      var that = this;
+      var options = this.options;
+      var tag = options.itemTag;
+      var attrs = "";
+      options.setAttr && $.each(options.setAttr, function(i, v){
+        attrs += ' data-'+v+'="'+sender[v]+'"';
+      });
 
-      return ('<'+tag+' title="'+sender.title+'" data-id="'+sender.id+'" data-type="'+sender.type+'">' + sender.title + '</'+tag+'>');
+      var val = sender instanceof Object ? sender[that.valKey] : sender; 
+
+      return ('<'+tag+attrs+' title="'+val+'">'+val+'</'+tag+'>');
     },
 
     fill: function (html) {
@@ -211,7 +222,7 @@
         this.hide();
       }
     },
-
+  
     complete: function () {
       var options = this.options;
       var val = options.filter(this.$element.val()).toString();
@@ -305,57 +316,19 @@
       $selected.addClass(selectedClass);
     },
 
-    /*place: function () {
-      var $element = this.$element;
-      var offset = $element.offset();
-      var left = offset.left;
-      var top = offset.top;
-      var height = $element.outerHeight();
-      var width = $element.outerWidth();
-
-      var styles = {
-        minWidth: width,
-        zIndex: this.options.zIndex
-      };
-
-      switch (this.options.position) {
-        case 'right':
-          styles.left = left + width;
-          styles.top = top;
-          break;
-
-        case 'left':
-          styles.right = $window.innerWidth() - left;
-          styles.top = top;
-          break;
-
-        case 'top':
-          styles.left = left;
-          styles.bottom = $window.innerHeight() - top;
-          break;
-
-        // case 'bottom':
-        default:
-          styles.left = left;
-          styles.top = top + height;
-      }
-
-      this.$completer.css(styles);
-    },*/
-
     // extend by issac
-    place: function () {
+    style: function () {
       var $element = this.$element;
       var height = $element.outerHeight();
       // var width = $element.outerWidth();
-      console.log(this.options.position);
+      console.log(this.options.style);
 
-      var styles = this.options.position ? this.options.position : {
+      var styles = this.options.style ? this.options.style : {
         right: 0, top: height
       };
       // styles.minWidth = width;
       styles.top = height + 5;
-      styles.zIndex = this.options.zIndex;
+      // styles.zIndex = this.options.zIndex;
 
       this.$completer.css(styles);
     },
@@ -391,12 +364,14 @@
     parent: 'body',
     itemTag: 'li',
     position: 'bottom', // or 'right'
+    style: {
+      zIndex: 1
+    },
     source: [],
     selectedClass: 'completer-selected',
     separator: '',
     suggest: false,
     template: '<ul class="completer-container"></ul>',
-    zIndex: 1,
     complete: $.noop,
     filter: function (val) {
       return val;

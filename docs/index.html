@@ -14,45 +14,19 @@
 <script type="text/javascript">
 var $search = $(".complete>input");
 $search.completer({
-	source: [1,2,3],
-	separator: 'q',
-	zIndex: 100,
+	source: [1,11,111,2,22,222,2222],
+	separator: '@', 
 	parent: '.complete',
 	suggest: false,
-	position: {left: '0',minWidth: '195px'},
-	/*ajax: function(){
-
-		var that = this;
-		var keyword = this.$element.val();
-		$.ajax({
-			type: 'post',
-			url: 'http:dev.slart.com/Display/Cooper/aSearch',
-			data: { key: keyword },
-			cache: false,
-			async: false,
-			dataType: 'json',
-			success: function(sender){
-				// console.log(sender);
-				var source = [];
-				var ajaxData = [];
-
-				// 防止返回空数据
-				sender.data && $.each(sender.data,function(i, v){
-					source.push(v.title);
-					ajaxData.push({
-						id: v.id,
-						title: v.title,
-						type: v.type
-					});
-				})
-				that.data = source;
-				that.ajaxData = ajaxData;
-			},
-			error: function(){
-				that.data = [];
-				that.ajaxData = [{id:'',title:'',type:''}];
-			}
-		});
+	style: {left: '0',minWidth: '195px'},
+	/*setAttr: ['id','type'],
+	ajax: {
+		url: './data.php',
+		// 返回的json需要处理
+		key: 'title',
+		filter: function(sender){
+			return sender.data;
+		}
 	},*/
 	search: function(){
 
